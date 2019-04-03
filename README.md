@@ -52,7 +52,7 @@ module.exports = { };
 ```js
 module.exports = {
   VK_TOKEN: "0ab806158c788...",
-  USER_ID: 191039467,
+  USER_ID: 426055107,
   DONEURL: "https://coin.vkforms.ru?vk_access_token_settings=..."
 };
 ```

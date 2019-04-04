@@ -1,14 +1,13 @@
 # VCoin
 VK Coin Miner - недомайнер на NodeJS
 
-![](https://pp.userapi.com/c852132/v852132090/f0416/lmQeM-pCAz0.jpg)
 
-<!-- <span class="badge-npmversion">
-  <a href="https://npmjs.org/package/vcoin" title="View this project on NPM"><img src="https://img.shields.io/npm/v/projectz.svg" alt="NPM version" /></a>
-</span> -->
+![](https://pp.userapi.com/c855028/v855028357/1734f/9kFW8iHOxHc.jpg)
 
 
 ***
+
+[Список команд в приложении](#команды)
 
 ## Для начала
 > **[Node.js](https://nodejs.org/) 8.0.0 или новее**
@@ -19,71 +18,84 @@ VK Coin Miner - недомайнер на NodeJS
 npm i
 ```
 
+## Запуск
+
 ### Использование аргументов
 
 ![](https://pp.userapi.com/c847020/v847020485/1d72be/ktfWqwnMjEY.jpg)
-![](https://pp.userapi.com/c847020/v847020485/1d72a7/Fxp2lGDPpLI.jpg)
 
-* -tforce - использовать токен принудительно (если в `.config.js` задана ссылка)
-* -u [URL]        - задает ссылку
-* -t [TOKEN]      - задает токен
+* `-tforce`         - использовать токен принудительно (если в `.config.js` задана ссылка)
+* `-u [URL]`        - задает ссылку
+* `-t [TOKEN]`      - задает токен
+* `-to [ID]`        - задает ID страницы для автоперевода `score`
+* `-ti [seconds]`   - задает интервал автоперевода в секундах `[по умолчанию 3600 секунд (1 час)]`
+* `-tsum [sum]`     - сколько `score` переводить (знаки до запятой)
+* `-autobuy`        - автопокупка
+* `-autobuyItem`    - какое покупать [ускорение](#названия-ускорений)
 
-Запуск через [токен](#поулчение-токена)
+
+Запуск поизводится из каталога приложения
+
+Обычный запуск (если есть файл `.config.js`)
+```shell
+node index.js
+```
+
+Запуск через [токен](#получение-токена)
 ```shell
 node index.js -t AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ```
 
+Запуск через [токен](#получение-токена) и автоперевод каждые `7200` секунды (2 часа) на аккаунт `191039467`
+```shell
+node index.js -t AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA -to 191039467 -ti 7200 
+```
+
+Запуск через [токен](#получение-токена) и автопокупка
+```shell
+node index.js -t AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA -autobuy
+```
+
 Запуск через ссылку
 ```shell
-node index.js -u https://coin.vkforms.ru?vk_access_token_settings=friends\&vk_app_id=6915965\&vk_are_notifications_enabled=0...
+node index.js -u https://coin.vkforms.ru?vk_access_token_settings=friends\&vk_app_id=6915965\&vk_...
 ```
 > Linux: Надо обратить внимание, что перед каждым символом `&` должен быть обратный слеш (`\&`)
 
 > Windows: ссылку указать в кавычках 
 
-## Создать файл `.config.js`
 
-Если нужно использовать аргументы, то в файл можно просто записать это:
-```js
-module.exports = { };
-```
+## Конфигурация из файла `.config.js`
 
-Если использовать конфиг из файла, то:
-```js
-module.exports = {
-  VK_TOKEN: "0ab806158c788...",
-  USER_ID: 426055107,
-  DONEURL: "https://coin.vkforms.ru?vk_access_token_settings=..."
-};
-```
+> Если используются только аргументы при запуске, то файл можно не создавать.
 
-| Параметр | Описание                                                |
-|----------|---------------------------------------------------------|
-| VK_TOKEN | [Поулчить токен](#поулчение-токена) (Это гораздо проще) |
-| USER_ID  | ID Страницы пользователя                                |
-| DONEURL  | Ссылка на приложение                                    |
 
-Если указать только ```VK_TOKEN```, то остальное можно не указывать.
+| Параметр | Описание                             |
+|----------|--------------------------------------|
+| VK_TOKEN | [Поулчить токен](#получение-токена)  |
+| DONEURL  | Ссылка на приложение                 |
 
-Например
+Если указать только ```VK_TOKEN```, то `DONEURL` можно не указывать.
+
+Конфиг с токеном:
 ```js
 module.exports = {
   VK_TOKEN: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 };
 ```
 
-### Поулчение токена
+Конфиг с ссылкой:
+```js
+module.exports = {
+  DONEURL: "https://coin.vkforms.ru?vk_access_token_settings=..."
+};
+```
+
+### Получение токена
 
 [Разрешить доступ, например, этому приложению](https://vk.cc/9eSo1E) и скопировать полученный токен (85 символов) 
 
 ***
-
-## Запуск
-
-Из каталога приложения
-```shell
-node index.js
-```
 
 
 ## Команды
@@ -92,14 +104,18 @@ node index.js
 - `stop` - остановить 
 - `run` - запустить 
 - `tran` - перевод 
-- `buy` - покупка (только при запущенном процессе) 
-  - `cursor`
-  - `cpu`
-  - `cpu_stack`
-  - `computer`
-  - `server_vk`
-  - `quantum_pc`
-  - `bonus` - только один раз
+- `price` - выведет текущие цены 
+- `buy` - покупка ускорения
+
+## Названия ускорений
+- `cursor`
+- `cpu`
+- `cpu_stack`
+- `computer`
+- `server_vk`
+- `quantum_pc`
+- `datacenter`
+- `bonus` - только один раз
 
 
 ## З.Ы.
@@ -108,6 +124,3 @@ node index.js
 > При переводе берется незначительная комиссия в виде `10%`
 
 > При lineQuestion вывод лога для удобства приостанавливается
-
-
-

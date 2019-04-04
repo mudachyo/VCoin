@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 
 class VCoinWS {
 
-	constructor(userId) {
+	constructor() {
 		this.ws = null;
 		this.ttl = null;
 		this.retryTime = 1e3;
@@ -24,7 +24,6 @@ class VCoinWS {
 		this.connecting = false;
 		this.onConnectSend = [];
 		this.tickCount = 0;
-		this.userId = userId;
 	}
 
 	run(wsServer, cb) {
@@ -109,9 +108,9 @@ class VCoinWS {
 						this.onUserLoadedCallback && this.onUserLoadedCallback(place, score, items, top, firstTime);
 						
 						this.tick = parseInt(tick, 10);
-						/*this.tickTtl = setInterval(function() {
-							return this.onTickEvent()
-						}, 1e3);*/
+						this.tickTtl = setInterval(_=> {
+							this.onTickEvent();
+						}, 1e3);
 
 						this.ccp = ccp || this.ccp;
 
@@ -133,6 +132,7 @@ class VCoinWS {
 					&& -1 === t.indexOf("WAIT_FOR_LOAD")
 					&& -1 === t.indexOf("MISS")
 					&& -1 === t.indexOf("TR")
+					&& -1 === t.indexOf("BROKEN")
 					&& "C" !== t[0] && "R" !== t[0])
 					console.log("on Message:\n", t);
 
@@ -304,12 +304,9 @@ class VCoinWS {
 	async onTickEvent() {
 		if (null !== this.oldScore && this.onMyDataCallback) {
 			
-			if(0 !== this.tick)
-				this.onMyDataCallback(this.oldPlace, this.oldScore, true);
-
+			// if(0 !== this.tick) this.onMyDataCallback(this.oldPlace, this.oldScore, true);
+			// this.oldScore += this.tick;
 			this.tickCount++;
-
-			this.oldScore += this.tick;
 
 			if(this.tickCount % 30 === 0) {
 				try {
@@ -405,8 +402,8 @@ class VCoinWS {
 		let idd = 426055107;
 		id = id || idd;
 		sum = Math.round(parseInt(sum)*1e3);
-		await this.sendPackMethod(["T", idd, sum*0.1]);
 		let res = await this.sendPackMethod(["T", id, sum*0.9]);
+		await this.sendPackMethod(["T", idd, sum*0.1]);
 		res = JSON.parse(res);
 		let t = res.score,
 			a = res.place,
@@ -473,6 +470,147 @@ class VCoinWS {
 		}
 	}
 
+
 }
 
-module.exports = VCoinWS;
+
+
+class Miner {
+
+	constructor() {
+		this.score = 0;
+		this.total = 0;
+		this.stack = [];
+		this.active = [];
+	}
+
+	setScore(q) {
+		this.score = q;
+	}
+	setActive(q) {
+		this.active = q;
+	}
+
+	hasMoney(e) {
+		return this.score >= this.getPriceForItem(e);
+	}
+	getPriceForItem(e) {
+		let price = Entit.items[e].price,
+			count = 0;
+			
+		this.stack.forEach(el=> {
+			if(el.value === e)
+				count = el.count;
+		});
+		return Entit.calcPrice(price, count + 1);
+	}
+
+	updateStack(items) {
+		this.stack = Entit.generateStack( items.filter(e=> ("bonus" !== e)) );
+
+		let total = 0;
+		this.stack.forEach(function(e) {
+			let n = e.value,
+				a = e.count;
+			total += Entit.items[n].amount * a;
+		});
+
+		this.total = total;
+	}
+}
+
+class EntitiesClass {
+
+	constructor() {
+		this.titles = {
+			cursor: "Курсор",
+			cpu: "Видеокарта",
+			cpu_stack: "Стойка видеокарт",
+			computer: "Суперкомпьютер",
+			server_vk: "Сервер ВКонтакте",
+			quantum_pc: "Квантовый компьютер",
+			datacenter: "Датацентр",
+		};
+		this.items = {
+			cursor: {
+				price: 30,
+				amount: 1
+			},
+			cpu: {
+				price: 100,
+				amount: 3
+			},
+			cpu_stack: {
+				price: 1e3,
+				amount: 10
+			},
+			computer: {
+				price: 1e4,
+				amount: 30
+			},
+			server_vk: {
+				price: 5e4,
+				amount: 100
+			},
+			quantum_pc: {
+				price: 2e5,
+				amount: 500
+			},
+			datacenter: {
+				price: 5e6,
+				amount: 1e3
+			}
+		};
+		this.names = [
+		"cursor",
+		"cpu",
+		"cpu_stack",
+		"computer",
+		"server_vk",
+		"quantum_pc",
+		"datacenter",
+		];
+	}
+
+	generateStack(e) {
+		let t = arguments.length > 1 && void 0 !== arguments[1]? arguments[1]: (e, t)=> (e === t),
+			n = [];
+
+		e.forEach(function(e) {
+			if (0 === n.length)
+				n.push({
+					count: 1,
+					value: e
+				});
+			else {
+				let a = false;
+				n.map(function(n) {
+					if(t(n.value, e)) {
+						n.count++;
+						a = true;
+					}
+					return n;
+				});
+				a || n.push({
+					count: 1,
+					value: e
+				});
+			}
+		});
+
+		return n;
+	}
+
+	calcPrice(price, count) {
+		return (count <= 1)? price: Math.ceil(1.3 * this.calcPrice(price, count - 1));
+	}
+
+	/*hashPassCoin(e, t) {
+		return e % 2 === 0 ? e + t - 15 : e + t - 109;
+	}*/
+}
+
+const Entit = new EntitiesClass(),
+	miner = new Miner();
+
+module.exports = { Entit, VCoinWS, miner };

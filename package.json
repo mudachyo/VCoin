@@ -6,7 +6,7 @@
   "dependencies": {
     "colors": "^1.3.3",
     "github-content": "^1.0.1",
-    "vk-io": "^4.0.0-rc.16",
+    "vk-io": "^4.8.3",
     "ws": "^7.4.6"
   },
   "devDependencies": {},
